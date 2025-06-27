@@ -37,7 +37,7 @@ const initialCelebrities: Celebrity[] = [
     timeElapsed: 0,
     speedMultiplier: 1,
     isActive: false,
-    image: "/assets/elon_musk.jpg",
+    image: "/images/elon_musk.jpg",
   },
   {
     id: "bezos",
@@ -49,7 +49,7 @@ const initialCelebrities: Celebrity[] = [
     timeElapsed: 0,
     speedMultiplier: 1,
     isActive: false,
-    image: "/assets/jeff_bezos.jpg",
+    image: "/images/jeff_bezos.jpg",
   },
   {
     id: "gates",
@@ -61,7 +61,7 @@ const initialCelebrities: Celebrity[] = [
     timeElapsed: 0,
     speedMultiplier: 1,
     isActive: false,
-    image: "/assets/bill_gates.jpeg",
+    image: "/images/bill_gates.jpeg",
   },
   {
     id: "buffett",
@@ -73,7 +73,7 @@ const initialCelebrities: Celebrity[] = [
     timeElapsed: 0,
     speedMultiplier: 1,
     isActive: false,
-    image: "/assets/warren_buffett.jpeg",
+    image: "/images/warren_buffett.jpeg",
   },
   {
     id: "zuckerberg",
@@ -85,7 +85,7 @@ const initialCelebrities: Celebrity[] = [
     timeElapsed: 0,
     speedMultiplier: 1,
     isActive: false,
-    image: "/assets/mark_zuckerberg.jpeg",
+    image: "/images/mark_zuckerberg.jpeg",
   },
 ];
 
