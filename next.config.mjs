@@ -10,6 +10,12 @@ const nextConfig = {
   },
   images: {
     unoptimized: true,
+    remotePatterns: [
+      {
+        protocol: "https",
+        hostname: "**",
+      },
+    ],
   },
   basePath: process.env.NODE_ENV === "production" ? "/moneyflow" : "",
   assetPrefix: process.env.NODE_ENV === "production" ? "/moneyflow/" : "",

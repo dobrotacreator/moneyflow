@@ -98,9 +98,17 @@ export default function MoneyFlow() {
     useState<Celebrity[]>(initialCelebrities);
   const [selectedId, setSelectedId] = useState<string>("musk");
   const [isLoaded, setIsLoaded] = useState(false);
+  const [imageErrors, setImageErrors] = useState<{ [key: string]: boolean }>(
+    {},
+  );
   const intervalRefs = useRef<{ [key: string]: NodeJS.Timeout }>({});
 
   const selectedCelebrity = celebrities.find((c) => c.id === selectedId)!;
+
+  // Handle image loading errors
+  const handleImageError = (celebrityId: string) => {
+    setImageErrors((prev) => ({ ...prev, [celebrityId]: true }));
+  };
 
   // Load data from localStorage on component mount
   useEffect(() => {
@@ -119,6 +127,7 @@ export default function MoneyFlow() {
               image: initial?.image || saved.image, // Keep original image path
             };
           });
+          setCelebrities(mergedData);
         }
 
         if (savedSelected) {
@@ -235,6 +244,46 @@ export default function MoneyFlow() {
     return `${hours.toString().padStart(2, "0")}:${minutes.toString().padStart(2, "0")}:${secs.toString().padStart(2, "0")}`;
   };
 
+  // Component for celebrity image with fallback
+  const CelebrityImage = ({
+    celebrity,
+    width,
+    height,
+    className,
+  }: {
+    celebrity: Celebrity;
+    width: number;
+    height: number;
+    className?: string;
+  }) => {
+    if (imageErrors[celebrity.id]) {
+      // Fallback to placeholder with initials
+      return (
+        <div
+          className={`${className} bg-gradient-to-br from-blue-500 to-purple-600 flex items-center justify-center text-white font-bold text-lg`}
+          style={{ width, height }}
+        >
+          {celebrity.name
+            .split(" ")
+            .map((n) => n[0])
+            .join("")}
+        </div>
+      );
+    }
+
+    return (
+      <Image
+        src={celebrity.image || "/placeholder.svg"}
+        alt={celebrity.name}
+        width={width}
+        height={height}
+        className={className}
+        onError={() => handleImageError(celebrity.id)}
+        unoptimized // For GitHub Pages compatibility
+      />
+    );
+  };
+
   // Don't render until data is loaded
   if (!isLoaded) {
     return (
@@ -263,17 +312,17 @@ export default function MoneyFlow() {
       </div>
 
       <div className="container mx-auto px-4 py-8 relative z-10">
-        {/* Header */}
+        {/* Header - Fixed responsive design */}
         <div className="text-center mb-12">
           <div className="float-animation">
-            <h1 className="text-7xl font-bold mb-6 bg-gradient-to-r from-emerald-600 via-blue-600 to-purple-600 bg-clip-text text-transparent leading-tight py-2">
+            <h1 className="text-4xl sm:text-5xl md:text-6xl lg:text-7xl font-bold mb-6 bg-gradient-to-r from-emerald-600 via-blue-600 to-purple-600 bg-clip-text text-transparent leading-tight py-2 px-2">
               💰 MoneyFlow
             </h1>
           </div>
-          <p className="text-2xl text-gray-700 mb-3 font-medium">
+          <p className="text-lg sm:text-xl md:text-2xl text-gray-700 mb-3 font-medium px-4">
             Ever wondered how fast billionaires make money? 🤑
           </p>
-          <p className="text-lg text-gray-600">
+          <p className="text-base sm:text-lg text-gray-600 px-4">
             Watch their wealth grow in real-time! ⏰✨
           </p>
         </div>
@@ -283,12 +332,11 @@ export default function MoneyFlow() {
           <Select value={selectedId} onValueChange={setSelectedId}>
             <SelectTrigger className="w-full h-16 text-lg glass bg-white/70 border-white/20 shadow-lg">
               <div className="flex items-center gap-3">
-                <Image
-                  src={selectedCelebrity.image || "/placeholder.svg"}
-                  alt={selectedCelebrity.name}
+                <CelebrityImage
+                  celebrity={selectedCelebrity}
                   width={40}
                   height={40}
-                  className="rounded-full"
+                  className="rounded-full object-cover"
                 />
                 <div className="text-left">
                   <div className="font-bold">
@@ -308,12 +356,11 @@ export default function MoneyFlow() {
                   className="h-16 cursor-pointer"
                 >
                   <div className="flex items-center gap-3 w-full">
-                    <Image
-                      src={celebrity.image || "/placeholder.svg"}
-                      alt={celebrity.name}
+                    <CelebrityImage
+                      celebrity={celebrity}
                       width={32}
                       height={32}
-                      className="rounded-full"
+                      className="rounded-full object-cover"
                     />
                     <div className="flex-1">
                       <div className="font-medium">
@@ -344,52 +391,51 @@ export default function MoneyFlow() {
           >
             <CardHeader className="text-center pb-4">
               <div className="flex items-center justify-center gap-4 mb-4">
-                <Image
-                  src={selectedCelebrity.image || "/placeholder.svg"}
-                  alt={selectedCelebrity.name}
+                <CelebrityImage
+                  celebrity={selectedCelebrity}
                   width={80}
                   height={80}
-                  className="rounded-full shadow-lg"
+                  className="rounded-full shadow-lg object-cover"
                 />
                 <div>
-                  <CardTitle className="text-3xl bg-gradient-to-r from-green-600 to-emerald-600 bg-clip-text text-transparent">
+                  <CardTitle className="text-2xl sm:text-3xl bg-gradient-to-r from-green-600 to-emerald-600 bg-clip-text text-transparent">
                     {selectedCelebrity.emoji} {selectedCelebrity.name}
                   </CardTitle>
-                  <p className="text-gray-600 font-medium">
+                  <p className="text-gray-600 font-medium text-sm sm:text-base">
                     {selectedCelebrity.title}
                   </p>
                 </div>
               </div>
-              <Badge className="bg-gradient-to-r from-green-500 to-emerald-500 text-white text-lg px-4 py-2">
+              <Badge className="bg-gradient-to-r from-green-500 to-emerald-500 text-white text-base sm:text-lg px-4 py-2">
                 ${selectedCelebrity.salaryPerSecond.toLocaleString()}/sec
               </Badge>
             </CardHeader>
             <CardContent className="space-y-8">
               <div className="text-center">
-                <div className="text-6xl font-bold bg-gradient-to-r from-green-600 to-emerald-600 bg-clip-text text-transparent mb-3">
+                <div className="text-4xl sm:text-5xl md:text-6xl font-bold bg-gradient-to-r from-green-600 to-emerald-600 bg-clip-text text-transparent mb-3">
                   {formatMoney(selectedCelebrity.totalEarned)}
                 </div>
-                <p className="text-gray-600 text-lg font-medium flex items-center justify-center gap-2">
+                <p className="text-gray-600 text-base sm:text-lg font-medium flex items-center justify-center gap-2">
                   <TrendingUp className="w-5 h-5" />
                   Total Earned 💸
                 </p>
               </div>
 
               <div className="text-center">
-                <div className="text-4xl font-bold text-blue-600 mb-3 flex items-center justify-center gap-3">
-                  <Clock className="w-10 h-10" />
+                <div className="text-2xl sm:text-3xl md:text-4xl font-bold text-blue-600 mb-3 flex items-center justify-center gap-3">
+                  <Clock className="w-8 h-8 sm:w-10 sm:h-10" />
                   {formatTime(selectedCelebrity.timeElapsed)}
                 </div>
-                <p className="text-gray-600 text-lg font-medium">
+                <p className="text-gray-600 text-base sm:text-lg font-medium">
                   Time Elapsed ⏱️
                 </p>
               </div>
 
               <div className="text-center p-4 bg-gradient-to-r from-yellow-50 to-orange-50 rounded-xl border border-yellow-200/50">
-                <div className="text-2xl text-orange-600 mb-2 font-bold">
+                <div className="text-xl sm:text-2xl text-orange-600 mb-2 font-bold">
                   Speed: {selectedCelebrity.speedMultiplier}x ⚡
                 </div>
-                <p className="text-gray-600 font-medium">
+                <p className="text-gray-600 font-medium text-sm sm:text-base">
                   Earning $
                   {(
                     selectedCelebrity.salaryPerSecond *
@@ -404,19 +450,19 @@ export default function MoneyFlow() {
           {/* Controls */}
           <Card className="glass bg-gradient-to-br from-purple-50/80 to-pink-50/80 border-purple-200/30 shadow-xl">
             <CardHeader>
-              <CardTitle className="text-3xl bg-gradient-to-r from-purple-600 to-pink-600 bg-clip-text text-transparent">
+              <CardTitle className="text-2xl sm:text-3xl bg-gradient-to-r from-purple-600 to-pink-600 bg-clip-text text-transparent">
                 Controls 🎮
               </CardTitle>
             </CardHeader>
             <CardContent className="space-y-8">
               {/* Start/Stop */}
               <div>
-                <h3 className="text-xl font-bold mb-4 text-gray-700">
+                <h3 className="text-lg sm:text-xl font-bold mb-4 text-gray-700">
                   Money Machine 💰
                 </h3>
                 <Button
                   onClick={() => toggleCelebrity(selectedId)}
-                  className={`w-full text-xl py-8 font-bold shadow-lg transition-all duration-300 ${
+                  className={`w-full text-lg sm:text-xl py-6 sm:py-8 font-bold shadow-lg transition-all duration-300 ${
                     selectedCelebrity.isActive
                       ? "bg-gradient-to-r from-red-500 to-pink-500 hover:from-red-600 hover:to-pink-600 shadow-red-200"
                       : "bg-gradient-to-r from-green-500 to-emerald-500 hover:from-green-600 hover:to-emerald-600 shadow-green-200"
@@ -424,12 +470,12 @@ export default function MoneyFlow() {
                 >
                   {selectedCelebrity.isActive ? (
                     <>
-                      <Pause className="w-6 h-6 mr-3" />
+                      <Pause className="w-5 h-5 sm:w-6 sm:h-6 mr-3" />
                       Pause Earning 🛑
                     </>
                   ) : (
                     <>
-                      <Play className="w-6 h-6 mr-3" />
+                      <Play className="w-5 h-5 sm:w-6 sm:h-6 mr-3" />
                       Start Earning 🚀
                     </>
                   )}
@@ -438,10 +484,10 @@ export default function MoneyFlow() {
 
               {/* Speed Controls */}
               <div>
-                <h3 className="text-xl font-bold mb-4 text-gray-700">
+                <h3 className="text-lg sm:text-xl font-bold mb-4 text-gray-700">
                   Time Speed ⚡
                 </h3>
-                <div className="grid grid-cols-4 gap-3">
+                <div className="grid grid-cols-4 gap-2 sm:gap-3">
                   {[1, 5, 10, 100].map((speed) => (
                     <Button
                       key={speed}
@@ -451,14 +497,16 @@ export default function MoneyFlow() {
                           ? "default"
                           : "outline"
                       }
-                      className={`h-16 font-bold transition-all duration-300 flex items-center justify-center gap-1 ${
+                      className={`h-14 sm:h-16 font-bold transition-all duration-300 flex items-center justify-center gap-1 ${
                         selectedCelebrity.speedMultiplier === speed
                           ? "bg-gradient-to-r from-blue-500 to-cyan-500 text-white shadow-lg shadow-blue-200"
                           : "glass bg-white/70 hover:bg-white/90 border-gray-200"
                       }`}
                     >
-                      <Zap className="w-4 h-4" />
-                      <span className="text-sm leading-none">{speed}x</span>
+                      <Zap className="w-3 h-3 sm:w-4 sm:h-4" />
+                      <span className="text-xs sm:text-sm leading-none">
+                        {speed}x
+                      </span>
                     </Button>
                   ))}
                 </div>
