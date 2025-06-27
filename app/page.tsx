@@ -111,7 +111,14 @@ export default function MoneyFlow() {
 
         if (savedData) {
           const parsedData = JSON.parse(savedData);
-          setCelebrities(parsedData);
+          // Merge saved data with initial data to preserve image paths
+          const mergedData = parsedData.map((saved: Celebrity) => {
+            const initial = initialCelebrities.find((c) => c.id === saved.id);
+            return {
+              ...saved,
+              image: initial?.image || saved.image, // Keep original image path
+            };
+          });
         }
 
         if (savedSelected) {
