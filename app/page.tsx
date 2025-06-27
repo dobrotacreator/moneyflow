@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, useRef, useCallback } from "react";
+import { useState, useEffect, useRef, useCallback, useMemo } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -85,13 +85,14 @@ const initialCelebrities: Celebrity[] = [
     timeElapsed: 0,
     speedMultiplier: 1,
     isActive: false,
-    image: "/images/mark_zuckerberg.jpeg",
+    image: "/images/mark_zuckerberg.jpg",
   },
 ];
 
 // Local storage keys
 const STORAGE_KEY = "moneyflow-data";
 const SELECTED_KEY = "moneyflow-selected";
+const IMAGE_ERRORS_KEY = "moneyflow-image-errors";
 
 export default function MoneyFlow() {
   const [celebrities, setCelebrities] =
@@ -105,10 +106,22 @@ export default function MoneyFlow() {
 
   const selectedCelebrity = celebrities.find((c) => c.id === selectedId)!;
 
-  // Handle image loading errors
-  const handleImageError = (celebrityId: string) => {
-    setImageErrors((prev) => ({ ...prev, [celebrityId]: true }));
-  };
+  // Handle image loading errors - only set error once
+  const handleImageError = useCallback((celebrityId: string) => {
+    setImageErrors((prev) => {
+      if (prev[celebrityId]) return prev; // Already marked as error
+      const newErrors = { ...prev, [celebrityId]: true };
+      // Save to localStorage
+      if (typeof window !== "undefined") {
+        try {
+          localStorage.setItem(IMAGE_ERRORS_KEY, JSON.stringify(newErrors));
+        } catch (error) {
+          console.error("Error saving image errors to localStorage:", error);
+        }
+      }
+      return newErrors;
+    });
+  }, []);
 
   // Load data from localStorage on component mount
   useEffect(() => {
@@ -116,6 +129,7 @@ export default function MoneyFlow() {
       try {
         const savedData = localStorage.getItem(STORAGE_KEY);
         const savedSelected = localStorage.getItem(SELECTED_KEY);
+        const savedImageErrors = localStorage.getItem(IMAGE_ERRORS_KEY);
 
         if (savedData) {
           const parsedData = JSON.parse(savedData);
@@ -132,6 +146,10 @@ export default function MoneyFlow() {
 
         if (savedSelected) {
           setSelectedId(savedSelected);
+        }
+
+        if (savedImageErrors) {
+          setImageErrors(JSON.parse(savedImageErrors));
         }
       } catch (error) {
         console.error("Error loading data from localStorage:", error);
@@ -231,6 +249,7 @@ export default function MoneyFlow() {
   };
 
   const formatMoney = (amount: number) => {
+    if (amount >= 1e12) return `$${(amount / 1e12).toFixed(2)}T`;
     if (amount >= 1e9) return `$${(amount / 1e9).toFixed(2)}B`;
     if (amount >= 1e6) return `$${(amount / 1e6).toFixed(2)}M`;
     if (amount >= 1e3) return `$${(amount / 1e3).toFixed(2)}K`;
@@ -244,45 +263,80 @@ export default function MoneyFlow() {
     return `${hours.toString().padStart(2, "0")}:${minutes.toString().padStart(2, "0")}:${secs.toString().padStart(2, "0")}`;
   };
 
-  // Component for celebrity image with fallback
-  const CelebrityImage = ({
-    celebrity,
-    width,
-    height,
-    className,
-  }: {
-    celebrity: Celebrity;
-    width: number;
-    height: number;
-    className?: string;
-  }) => {
-    if (imageErrors[celebrity.id]) {
-      // Fallback to placeholder with initials
-      return (
-        <div
-          className={`${className} bg-gradient-to-br from-blue-500 to-purple-600 flex items-center justify-center text-white font-bold text-lg`}
-          style={{ width, height }}
-        >
-          {celebrity.name
-            .split(" ")
-            .map((n) => n[0])
-            .join("")}
-        </div>
-      );
-    }
+  // Memoized component for celebrity image with stable fallback
+  const CelebrityImage = useMemo(() => {
+    return function CelebrityImageComponent({
+      celebrity,
+      width,
+      height,
+      className,
+    }: {
+      celebrity: Celebrity;
+      width: number;
+      height: number;
+      className?: string;
+    }) {
+      // If image is marked as error, show fallback immediately
+      if (imageErrors[celebrity.id]) {
+        return (
+          <div
+            className={`${className} bg-gradient-to-br from-blue-500 to-purple-600 flex items-center justify-center text-white font-bold`}
+            style={{ width, height, fontSize: width < 50 ? "12px" : "16px" }}
+          >
+            {celebrity.name
+              .split(" ")
+              .map((n) => n[0])
+              .join("")}
+          </div>
+        );
+      }
 
-    return (
-      <Image
-        src={celebrity.image || "/placeholder.svg"}
-        alt={celebrity.name}
-        width={width}
-        height={height}
-        className={className}
-        onError={() => handleImageError(celebrity.id)}
-        unoptimized // For GitHub Pages compatibility
-      />
-    );
-  };
+      return (
+        <Image
+          src={celebrity.image || "/placeholder.svg"}
+          alt={celebrity.name}
+          width={width}
+          height={height}
+          className={className}
+          onError={() => handleImageError(celebrity.id)}
+          unoptimized
+          priority={celebrity.id === selectedId}
+        />
+      );
+    };
+  }, [imageErrors, handleImageError, selectedId]);
+
+  // Memoized select items to prevent re-rendering
+  const selectItems = useMemo(() => {
+    return celebrities.map((celebrity) => (
+      <SelectItem
+        key={celebrity.id}
+        value={celebrity.id}
+        className="h-16 cursor-pointer"
+      >
+        <div className="flex items-center gap-3 w-full">
+          <CelebrityImage
+            celebrity={celebrity}
+            width={32}
+            height={32}
+            className="rounded-full object-cover"
+          />
+          <div className="flex-1">
+            <div className="font-medium">
+              {celebrity.emoji} {celebrity.name}
+            </div>
+            <div className="text-xs text-gray-600">{celebrity.title}</div>
+          </div>
+          {celebrity.isActive && (
+            <Badge className="bg-green-500/20 text-green-700 border-green-300">
+              <Play className="w-3 h-3 mr-1" />
+              Active
+            </Badge>
+          )}
+        </div>
+      </SelectItem>
+    ));
+  }, [celebrities, CelebrityImage]);
 
   // Don't render until data is loaded
   if (!isLoaded) {
@@ -349,36 +403,7 @@ export default function MoneyFlow() {
               </div>
             </SelectTrigger>
             <SelectContent className="glass bg-white/90">
-              {celebrities.map((celebrity) => (
-                <SelectItem
-                  key={celebrity.id}
-                  value={celebrity.id}
-                  className="h-16 cursor-pointer"
-                >
-                  <div className="flex items-center gap-3 w-full">
-                    <CelebrityImage
-                      celebrity={celebrity}
-                      width={32}
-                      height={32}
-                      className="rounded-full object-cover"
-                    />
-                    <div className="flex-1">
-                      <div className="font-medium">
-                        {celebrity.emoji} {celebrity.name}
-                      </div>
-                      <div className="text-xs text-gray-600">
-                        {celebrity.title}
-                      </div>
-                    </div>
-                    {celebrity.isActive && (
-                      <Badge className="bg-green-500/20 text-green-700 border-green-300">
-                        <Play className="w-3 h-3 mr-1" />
-                        Active
-                      </Badge>
-                    )}
-                  </div>
-                </SelectItem>
-              ))}
+              {selectItems}
             </SelectContent>
           </Select>
         </div>
