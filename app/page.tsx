@@ -37,7 +37,8 @@ const initialCelebrities: Celebrity[] = [
     timeElapsed: 0,
     speedMultiplier: 1,
     isActive: false,
-    image: "/images/elon_musk.jpg",
+    image:
+      "https://upload.wikimedia.org/wikipedia/commons/thumb/3/34/Elon_Musk_Royal_Society_%28crop2%29.jpg/220px-Elon_Musk_Royal_Society_%28crop2%29.jpg",
   },
   {
     id: "bezos",
@@ -49,7 +50,8 @@ const initialCelebrities: Celebrity[] = [
     timeElapsed: 0,
     speedMultiplier: 1,
     isActive: false,
-    image: "/images/jeff_bezos.jpg",
+    image:
+      "https://upload.wikimedia.org/wikipedia/commons/thumb/6/6c/Jeff_Bezos_at_Amazon_Spheres_Grand_Opening_in_Seattle_-_2018_%2839074799225%29_%28cropped%29.jpg/220px-Jeff_Bezos_at_Amazon_Spheres_Grand_Opening_in_Seattle_-_2018_%2839074799225%29_%28cropped%29.jpg",
   },
   {
     id: "gates",
@@ -61,7 +63,8 @@ const initialCelebrities: Celebrity[] = [
     timeElapsed: 0,
     speedMultiplier: 1,
     isActive: false,
-    image: "/images/bill_gates.jpeg",
+    image:
+      "https://upload.wikimedia.org/wikipedia/commons/thumb/a/a0/Bill_Gates_2018.jpg/220px-Bill_Gates_2018.jpg",
   },
   {
     id: "buffett",
@@ -73,7 +76,8 @@ const initialCelebrities: Celebrity[] = [
     timeElapsed: 0,
     speedMultiplier: 1,
     isActive: false,
-    image: "/images/warren_buffett.jpeg",
+    image:
+      "https://upload.wikimedia.org/wikipedia/commons/thumb/5/51/Warren_Buffett_KU_Visit.jpg/220px-Warren_Buffett_KU_Visit.jpg",
   },
   {
     id: "zuckerberg",
@@ -85,7 +89,8 @@ const initialCelebrities: Celebrity[] = [
     timeElapsed: 0,
     speedMultiplier: 1,
     isActive: false,
-    image: "/images/mark_zuckerberg.jpg",
+    image:
+      "https://upload.wikimedia.org/wikipedia/commons/thumb/1/18/Mark_Zuckerberg_F8_2019_Keynote_%2832830578717%29_%28cropped%29.jpg/220px-Mark_Zuckerberg_F8_2019_Keynote_%2832830578717%29_%28cropped%29.jpg",
   },
 ];
 
